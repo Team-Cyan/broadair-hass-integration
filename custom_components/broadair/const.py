@@ -1,0 +1,17 @@
+"""Constants for the BROAD AIR integration."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+
+DOMAIN = "broadair"
+
+DEFAULT_BASE_URL = "https://broadcleanair.net:8103"
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_VERIFY_SSL = False
+
+CONF_BASE_URL = "base_url"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_VERIFY_SSL = "verify_ssl"
+
+PLATFORMS = ["sensor", "binary_sensor"]

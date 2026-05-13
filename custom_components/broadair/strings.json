@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "BROAD AIR",
+        "description": "Connect to the official BROAD AIR cloud API.",
+        "data": {
+          "username": "Username or phone number",
+          "password": "Password",
+          "base_url": "API base URL",
+          "verify_ssl": "Verify SSL certificate",
+          "scan_interval": "Scan interval in seconds"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the BROAD AIR API.",
+      "invalid_auth": "Invalid BROAD AIR credentials or token.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This BROAD AIR account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "BROAD AIR options",
+        "data": {
+          "base_url": "API base URL",
+          "verify_ssl": "Verify SSL certificate",
+          "scan_interval": "Scan interval in seconds"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": { "name": "Indoor temperature" },
+      "indoor_temperature_2": { "name": "Secondary indoor temperature" },
+      "outdoor_temperature": { "name": "Outdoor temperature" },
+      "fresh_air_temperature": { "name": "Fresh air temperature" },
+      "exhaust_temperature": { "name": "Exhaust temperature" },
+      "supply_air_temperature": { "name": "Supply air temperature" },
+      "indoor_humidity": { "name": "Indoor humidity" },
+      "supply_air_humidity": { "name": "Supply air humidity" },
+      "co2": { "name": "CO2" },
+      "outdoor_pm25": { "name": "Outdoor PM2.5" },
+      "indoor_pm25": { "name": "Indoor PM2.5" },
+      "realtime_air_volume": { "name": "Realtime air volume" },
+      "running_frequency": { "name": "Running frequency" },
+      "set_frequency": { "name": "Set frequency" },
+      "realtime_power": { "name": "Realtime power" },
+      "realtime_heat_recovery": { "name": "Realtime heat recovery" }
+    },
+    "binary_sensor": {
+      "online": { "name": "Online" },
+      "running": { "name": "Running" },
+      "fault": { "name": "Fault" }
+    }
+  }
+}

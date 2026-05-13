@@ -1,0 +1,6 @@
+{
+  "name": "BROAD AIR",
+  "render_readme": true,
+  "domains": ["sensor", "binary_sensor"],
+  "homeassistant": "2025.12.0"
+}

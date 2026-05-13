@@ -1,0 +1,12 @@
+rules:
+  config_flow: done
+  test-before-configure: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  config-entry-unloading: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-supported-functions: done
+  docs-known-limitations: done
