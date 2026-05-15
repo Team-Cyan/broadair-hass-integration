@@ -14,8 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import BroadAirApiClient, BroadAirDevice, BroadAirError
+from .capabilities import FrequencyRange, resolve_frequency_range
 from .const import (
     CONF_BASE_URL,
+    CONF_FREQUENCY_MAX,
+    CONF_FREQUENCY_MIN,
     CONF_VERIFY_SSL,
     DEFAULT_BASE_URL,
     DEFAULT_VERIFY_SSL,
@@ -45,6 +48,8 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
         password: str,
         base_url: str | None,
         verify_ssl: bool | None,
+        frequency_min: int | None,
+        frequency_max: int | None,
         update_interval,
     ) -> None:
         super().__init__(
@@ -63,6 +68,8 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
             verify_ssl=DEFAULT_VERIFY_SSL if verify_ssl is None else verify_ssl,
         )
         self.devices: list[BroadAirDevice] = []
+        self._frequency_min = frequency_min
+        self._frequency_max = frequency_max
         self._last_command_at = 0.0
         self._command_lock = asyncio.Lock()
 
@@ -109,8 +116,26 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
         """Set fresh air unit frequency and refresh state."""
 
         guid = self.resolve_device_guid(device_guid)
+        frequency_range = self.frequency_range(guid)
+        if not frequency_range.minimum <= frequency <= frequency_range.maximum:
+            raise HomeAssistantError(
+                "BROAD AIR frequency must be between "
+                f"{frequency_range.minimum} and {frequency_range.maximum} Hz"
+            )
         await self._run_control_command(
             lambda: self.client.set_fresh_air_frequency(guid, frequency)
+        )
+
+    def frequency_range(self, device_guid: str) -> FrequencyRange:
+        """Return the resolved frequency range for a device."""
+
+        device = next(device for device in self.devices if device.guid == device_guid)
+        state = self.data.get(device_guid) if self.data else None
+        return resolve_frequency_range(
+            device=device.raw,
+            status=state.status if state else None,
+            override_min=self._frequency_min,
+            override_max=self._frequency_max,
         )
 
     async def async_refresh_realtime(self, device_guid: str | None = None) -> None:
@@ -160,5 +185,7 @@ def coordinator_from_config_entry(hass: HomeAssistant, entry) -> BroadAirCoordin
         password=entry.data["password"],
         base_url=entry.options.get(CONF_BASE_URL, entry.data.get(CONF_BASE_URL)),
         verify_ssl=entry.options.get(CONF_VERIFY_SSL, entry.data.get(CONF_VERIFY_SSL)),
+        frequency_min=int(entry.options.get(CONF_FREQUENCY_MIN, 0)) or None,
+        frequency_max=int(entry.options.get(CONF_FREQUENCY_MAX, 0)) or None,
         update_interval=timedelta(seconds=scan_interval),
     )

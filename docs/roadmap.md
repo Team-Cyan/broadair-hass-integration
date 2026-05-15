@@ -30,6 +30,7 @@
 - Add switch/number entities after service-level behavior is proven. **Done.**
 - Keep realtime refresh as an automatic post-command refresh and service action; no button entity. **Done.**
 - Add command serialization and command result refreshes. **Done.**
+- Resolve frequency ranges by options, API fields, known models, then fallback. **Done.**
 
 ## Phase 3: Polish and distribution
 

@@ -19,6 +19,8 @@ from .api import (
 )
 from .const import (
     CONF_BASE_URL,
+    CONF_FREQUENCY_MAX,
+    CONF_FREQUENCY_MIN,
     CONF_SCAN_INTERVAL,
     CONF_VERIFY_SSL,
     DEFAULT_BASE_URL,
@@ -180,6 +182,14 @@ class BroadAirOptionsFlow(config_entries.OptionsFlow):
                             self._config_entry.data.get(CONF_SCAN_INTERVAL, 60),
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=30, max=3600)),
+                    vol.Optional(
+                        CONF_FREQUENCY_MIN,
+                        default=self._config_entry.options.get(CONF_FREQUENCY_MIN, 0),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=200)),
+                    vol.Optional(
+                        CONF_FREQUENCY_MAX,
+                        default=self._config_entry.options.get(CONF_FREQUENCY_MAX, 0),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=200)),
                 }
             ),
         )

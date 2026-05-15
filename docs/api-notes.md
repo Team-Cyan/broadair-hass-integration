@@ -168,6 +168,21 @@ Operations observed in the official app:
 - `20`: update automatic tuning configuration
 - `23`: enable automatic CO2/freshness tuning path
 
+## Frequency Range Capability
+
+`GetFreshAirStatus` did not expose frequency min/max fields on the verified
+`SQ260` device, and `GetEqModelList` only returned available product model
+names. The integration still checks common API field names such as
+`FREQUENCY_MIN` and `FREQUENCY_MAX` first in case other devices or future API
+versions expose them.
+
+Resolution order:
+
+1. Options override (`frequency_min` and `frequency_max`) when both are valid.
+2. API status fields when a valid min/max pair exists.
+3. Known model table, currently `SQ260` and `SQ260-C1` as `20-50 Hz`.
+4. Default fallback `0-100 Hz`.
+
 Control is intentionally deferred because it changes device state and needs more guardrails and live review.
 
 Phase 2 now wraps the low-risk control surface in explicit Home Assistant services. Live mutation of real hardware should still be reviewed deliberately before adding direct switch or number entities.

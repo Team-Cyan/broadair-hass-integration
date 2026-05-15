@@ -43,8 +43,6 @@ class BroadAirFrequencyNumber(BroadAirEntity, NumberEntity):
 
     _attr_translation_key = "target_frequency"
     _attr_name = "Target frequency"
-    _attr_native_min_value = 20
-    _attr_native_max_value = 50
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
     _attr_mode = NumberMode.SLIDER
@@ -61,6 +59,18 @@ class BroadAirFrequencyNumber(BroadAirEntity, NumberEntity):
         if state is None:
             return None
         return _float_value(state.status.get("FREQUENCY_SET"))
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum target frequency for this device."""
+
+        return float(self.coordinator.frequency_range(self._device_guid).minimum)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum target frequency for this device."""
+
+        return float(self.coordinator.frequency_range(self._device_guid).maximum)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the target frequency."""

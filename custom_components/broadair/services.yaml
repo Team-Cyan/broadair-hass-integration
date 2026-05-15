@@ -32,13 +32,14 @@ set_frequency:
         text:
     frequency:
       name: Frequency
-      description: Target frequency value sent to the official cloud API.
+      description: Target frequency value sent to the official cloud API. The
+        integration validates the value against each device's resolved range.
       required: true
       example: 20
       selector:
         number:
-          min: 20
-          max: 50
+          min: 0
+          max: 200
           mode: box
 
 refresh_realtime:

@@ -11,6 +11,8 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_VERIFY_SSL = False
 
 CONF_BASE_URL = "base_url"
+CONF_FREQUENCY_MAX = "frequency_max"
+CONF_FREQUENCY_MIN = "frequency_min"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VERIFY_SSL = "verify_ssl"
 

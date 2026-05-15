@@ -59,6 +59,9 @@ directory, restart Home Assistant, then add the integration from
 - **API base URL**: keep the default `https://broadcleanair.net:8103`.
 - **Verify SSL certificate**: keep disabled for the default host because the official endpoint currently serves a certificate that does not match `broadcleanair.net`.
 - **Scan interval**: default `60` seconds. The allowed range is 30 to 3600 seconds.
+- **Minimum/maximum frequency override**: keep both values at `0` for automatic
+  detection. The integration checks API status fields first, then known model
+  ranges such as `SQ260`, then falls back to a broad default.
 
 The official Android app currently uses `https://broadcleanair.net:8103`. Its TLS certificate does not match that host, so this integration exposes a setup option to disable SSL verification for this API host. Keep the default unless your environment requires stricter handling.
 
