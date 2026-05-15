@@ -8,6 +8,7 @@ import random
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import aiohttp
@@ -117,7 +118,7 @@ class BroadAirApiClient:
     async def login(self) -> None:
         """Authenticate and cache the returned session token."""
 
-        timestamp = str(int(time.time()))
+        timestamp = str(await self._server_timestamp())
         nonce = f"{random.randint(0, 999999):06d}"
         payload = {
             "user_id": self._username,
@@ -132,6 +133,26 @@ class BroadAirApiClient:
         if not token:
             raise BroadAirAuthError("Login succeeded without a session token")
         self._token = str(token)
+
+    async def _server_timestamp(self) -> int:
+        """Return server-aligned epoch seconds for the login signature."""
+
+        url = f"{self._base_url}/api/Account/Login"
+        try:
+            async with self._session.head(
+                url,
+                ssl=self._verify_ssl,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as response:
+                date_header = response.headers.get("Date")
+        except (TimeoutError, aiohttp.ClientError):
+            return int(time.time())
+        if not date_header:
+            return int(time.time())
+        try:
+            return int(parsedate_to_datetime(date_header).timestamp())
+        except (TypeError, ValueError, AttributeError):
+            return int(time.time())
 
     async def get_fresh_air_devices(self) -> list[BroadAirDevice]:
         """Return fresh air devices bound to the current account."""

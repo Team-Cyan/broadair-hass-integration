@@ -45,6 +45,8 @@ Payload:
 
 The returned `Body.Data.token` is the session token used as a `token` request header for subsequent calls.
 
+The server rejects login signatures when the timestamp drifts too far from its clock. The integration reads the API server `Date` header before signing login requests and falls back to local time only if that probe fails.
+
 ## Fresh Air Device List
 
 Endpoint:

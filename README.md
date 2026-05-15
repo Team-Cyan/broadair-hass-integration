@@ -28,6 +28,8 @@ Copy `custom_components/broadair` into your Home Assistant `custom_components` d
 
 The official Android app currently uses `https://broadcleanair.net:8103`. Its TLS certificate does not match that host, so this integration exposes a setup option to disable SSL verification for this API host. Keep the default unless your environment requires stricter handling.
 
+The official API has a narrow login timestamp window. The integration signs login requests with the API server time when available, which avoids false authentication failures on Home Assistant hosts with small clock drift.
+
 ## Supported entities
 
 Entity names depend on the device name reported by the cloud. The integration currently exposes:
