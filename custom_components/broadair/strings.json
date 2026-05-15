@@ -73,9 +73,6 @@
     },
     "number": {
       "target_frequency": { "name": "Target frequency" }
-    },
-    "button": {
-      "refresh_realtime": { "name": "Refresh realtime data" }
     }
   }
 }

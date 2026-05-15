@@ -280,6 +280,7 @@ class BroadAirApiClient:
         payload: Mapping[str, Any],
         *,
         include_token: bool = True,
+        retry_auth: bool = True,
     ) -> Any:
         headers = {"Content-Type": "application/json"}
         if include_token:
@@ -313,6 +314,15 @@ class BroadAirApiClient:
         if code != 200:
             message = str(head.get("Msg") or "BROAD AIR API error")
             if code in {500, 600, 700, 800}:
+                if include_token and retry_auth:
+                    self._token = None
+                    await self.login()
+                    return await self._request(
+                        path,
+                        payload,
+                        include_token=include_token,
+                        retry_auth=False,
+                    )
                 raise BroadAirAuthError(message)
             raise BroadAirApiError(message)
         body = envelope.get("Body")

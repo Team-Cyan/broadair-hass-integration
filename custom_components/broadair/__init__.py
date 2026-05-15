@@ -24,7 +24,7 @@ SET_FREQUENCY_SERVICE_SCHEMA = CONTROL_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_FREQUENCY): vol.All(
             vol.Coerce(int),
-            vol.Range(min=0, max=100),
+            vol.Range(min=20, max=50),
         )
     }
 )

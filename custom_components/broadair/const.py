@@ -14,7 +14,7 @@ CONF_BASE_URL = "base_url"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VERIFY_SSL = "verify_ssl"
 
-PLATFORMS = ["sensor", "binary_sensor", "switch", "number", "button"]
+PLATFORMS = ["sensor", "binary_sensor", "switch", "number"]
 
 ATTR_DEVICE_GUID = "device_guid"
 ATTR_FREQUENCY = "frequency"

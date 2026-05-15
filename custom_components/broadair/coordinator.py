@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -20,6 +21,9 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
+
+COMMAND_COOLDOWN_SECONDS = 2.0
+COMMAND_SETTLE_REFRESH_SECONDS = 5.0
 
 
 @dataclass(slots=True)
@@ -60,6 +64,7 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
         )
         self.devices: list[BroadAirDevice] = []
         self._last_command_at = 0.0
+        self._command_lock = asyncio.Lock()
 
     async def _async_update_data(self) -> dict[str, BroadAirDeviceState]:
         try:
@@ -117,18 +122,28 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
         )
 
     async def _run_control_command(self, command: Callable[[], Awaitable[Any]]) -> None:
-        """Run a control command with a small cooldown, then refresh state."""
+        """Run a control command serially, then refresh state."""
 
-        now = time.monotonic()
-        cooldown_remaining = 2.0 - (now - self._last_command_at)
-        if cooldown_remaining > 0:
-            raise HomeAssistantError("BROAD AIR command cooldown is still active")
-        try:
-            await command()
-            self._last_command_at = time.monotonic()
-            await self.async_request_refresh()
-        except BroadAirError as err:
-            raise HomeAssistantError(str(err)) from err
+        async with self._command_lock:
+            now = time.monotonic()
+            cooldown_remaining = COMMAND_COOLDOWN_SECONDS - (
+                now - self._last_command_at
+            )
+            if cooldown_remaining > 0:
+                await asyncio.sleep(cooldown_remaining)
+            try:
+                await command()
+                self._last_command_at = time.monotonic()
+                await self.async_request_refresh()
+                self.hass.async_create_task(self._async_delayed_refresh())
+            except BroadAirError as err:
+                raise HomeAssistantError(str(err)) from err
+
+    async def _async_delayed_refresh(self) -> None:
+        """Refresh again after the cloud/device state has had time to settle."""
+
+        await asyncio.sleep(COMMAND_SETTLE_REFRESH_SECONDS)
+        await self.async_request_refresh()
 
 
 def coordinator_from_config_entry(hass: HomeAssistant, entry) -> BroadAirCoordinator:

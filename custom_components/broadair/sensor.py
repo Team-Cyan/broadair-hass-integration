@@ -37,6 +37,36 @@ def _float_value(value: Any) -> float | None:
         return None
 
 
+def _temperature_value(value: Any) -> float | None:
+    parsed = _float_value(value)
+    if parsed is None or parsed <= -40:
+        return None
+    return parsed
+
+
+def _optional_indoor_temperature_value(value: Any) -> float | None:
+    parsed = _float_value(value)
+    if parsed is None or parsed <= -20:
+        return None
+    return parsed
+
+
+def _humidity_value(value: Any) -> float | None:
+    parsed = _float_value(value)
+    if parsed is None or parsed <= 0 or parsed > 100:
+        return None
+    return parsed
+
+
+def _outdoor_pm25_value(value: Any) -> float | None:
+    parsed = _float_value(value)
+    if parsed is None:
+        return None
+    if parsed > 1000:
+        return parsed / 1000
+    return parsed
+
+
 class BroadAirSensorDescription(SensorEntityDescription, frozen_or_thawed=True):
     """Description for a BROAD AIR sensor."""
 
@@ -51,6 +81,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_temperature_value,
     ),
     BroadAirSensorDescription(
         key="TEMP_INDOOR2",
@@ -59,6 +90,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_optional_indoor_temperature_value,
     ),
     BroadAirSensorDescription(
         key="TEMP_OUTDOOR",
@@ -67,6 +99,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_temperature_value,
     ),
     BroadAirSensorDescription(
         key="TEMP_FAIR",
@@ -75,6 +108,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_temperature_value,
     ),
     BroadAirSensorDescription(
         key="TEMP_EXHAUST",
@@ -83,6 +117,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_temperature_value,
     ),
     BroadAirSensorDescription(
         key="SUPPLY_AIR_TEMP",
@@ -91,6 +126,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_temperature_value,
     ),
     BroadAirSensorDescription(
         key="INDOOR_HUMIDITY",
@@ -99,6 +135,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_humidity_value,
     ),
     BroadAirSensorDescription(
         key="SUPPLY_AIR_HUMIDITY",
@@ -107,6 +144,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_humidity_value,
     ),
     BroadAirSensorDescription(
         key="CO2_CONCENTRATION",
@@ -123,6 +161,7 @@ SENSORS: tuple[BroadAirSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_outdoor_pm25_value,
     ),
     BroadAirSensorDescription(
         key="PATICLE_CCT_2_5",

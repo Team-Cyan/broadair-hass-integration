@@ -129,6 +129,18 @@ The response wraps `Body.Data` as a JSON-encoded object. Useful fields observed 
 - `RT_HOT_RECOVERY`
 - `FAULT`
 
+Observed status cleanup in the Home Assistant integration:
+
+- `TEMP_INDOOR2=-25` and `SUPPLY_AIR_TEMP=-45` behave like missing-sensor
+  placeholders on the verified SQ260 device, so they are exposed as unknown.
+- `INDOOR_HUMIDITY=0` and `SUPPLY_AIR_HUMIDITY=0` are treated as missing
+  humidity readings rather than real 0% humidity.
+- `OUT_PM2.5=140000` appears to be scaled by 1000, so it is exposed as
+  `140.0 ug/m3`.
+- The device list can report `online=0` even while status polling succeeds. The
+  Home Assistant online binary sensor therefore represents coordinator polling
+  success, not the stale list flag.
+
 ## Control API For Phase 2
 
 Endpoint:

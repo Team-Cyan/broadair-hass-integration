@@ -15,13 +15,12 @@ Implemented:
 - Reauthentication flow for expired or changed credentials.
 - Cloud login using the official app signing scheme.
 - Device list discovery for fresh air units.
-- Periodic status polling.
+- Periodic status polling, plus an automatic delayed refresh after commands.
 - Sensors for common fresh air status values such as indoor/outdoor temperature, CO2, PM2.5, frequency, realtime air volume, humidity, and power/heat recovery metrics.
 - Binary sensors for online state, running state, and fault presence.
 - UI controls:
   - power switch
   - target frequency number
-  - realtime refresh button
 - Explicit services:
   - `broadair.turn_on`
   - `broadair.turn_off`
@@ -90,7 +89,6 @@ Entity names depend on the device name reported by the cloud. The integration cu
 - Fault present
 - Power switch
 - Target frequency
-- Refresh realtime data button
 
 ## Services
 
@@ -102,7 +100,9 @@ data:
   frequency: 20
 ```
 
-The integration waits for the command call to complete, applies a short command cooldown, and refreshes cloud state after each command. It does not assume optimistic success.
+The integration waits for the command call to complete, serializes rapid
+commands instead of failing with a cooldown error, and refreshes cloud state
+after each command. It does not assume optimistic success.
 
 ## Development
 

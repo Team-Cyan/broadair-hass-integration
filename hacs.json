@@ -1,6 +1,6 @@
 {
   "name": "BROAD AIR",
   "render_readme": true,
-  "domains": ["sensor", "binary_sensor", "switch", "number", "button"],
+  "domains": ["sensor", "binary_sensor", "switch", "number"],
   "homeassistant": "2025.12.0"
 }

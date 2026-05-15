@@ -42,6 +42,7 @@ class BroadAirPowerSwitch(BroadAirEntity, SwitchEntity):
 
     _attr_translation_key = "power"
     _attr_name = "Power"
+    _attr_assumed_state = True
 
     def __init__(self, coordinator: BroadAirCoordinator, device_guid: str) -> None:
         super().__init__(coordinator, device_guid)
@@ -54,7 +55,14 @@ class BroadAirPowerSwitch(BroadAirEntity, SwitchEntity):
         state = self.device_state
         if state is None:
             return None
-        return _frequency_is_running(state.status.get("FREQUENCY_RUN"))
+        return any(
+            value is True
+            for value in (
+                _frequency_is_running(state.status.get("FREQUENCY_RUN")),
+                _frequency_is_running(state.status.get("RT_VOLUME")),
+                _frequency_is_running(state.status.get("POWER_USED_RT")),
+            )
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the fresh air unit."""

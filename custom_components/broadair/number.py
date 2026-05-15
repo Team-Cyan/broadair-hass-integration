@@ -43,8 +43,8 @@ class BroadAirFrequencyNumber(BroadAirEntity, NumberEntity):
 
     _attr_translation_key = "target_frequency"
     _attr_name = "Target frequency"
-    _attr_native_min_value = 0
-    _attr_native_max_value = 100
+    _attr_native_min_value = 20
+    _attr_native_max_value = 50
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
     _attr_mode = NumberMode.SLIDER

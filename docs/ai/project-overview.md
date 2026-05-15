@@ -5,7 +5,7 @@
 - A Home Assistant custom integration for BROAD / Yuanda fresh air systems.
 - A cloud-API integration that discovers devices, polls state, and exposes fresh-air sensors.
 - A cautious control surface with service actions plus direct UI entities for
-  power, target frequency, and realtime refresh.
+  power and target frequency.
 
 ## What It Is Not
 
@@ -28,8 +28,10 @@
 - The coordinator polls device state and refreshes entities.
 - Sensor and binary sensor platforms expose read-only fresh-air state.
 - Services provide the safe control layer for turn on, turn off, frequency updates, and explicit refresh.
-- Switch, number, and button platforms expose direct Home Assistant UI controls
-  backed by the same coordinator command methods.
+- Switch and number platforms expose direct Home Assistant UI controls backed by
+  the same coordinator command methods.
+- The realtime refresh command remains a service-level action; normal operation
+  uses polling plus post-command refreshes instead of a manual button entity.
 
 ## Documentation Strategy
 

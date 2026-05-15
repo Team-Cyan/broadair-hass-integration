@@ -100,7 +100,7 @@ class BroadAirBinarySensor(BroadAirEntity, BinarySensorEntity):
         if state is None:
             return None
         if self.entity_description.key == "online":
-            return state.device.online
+            return True
         return self.entity_description.value_fn(
             state.status.get(self.entity_description.key)
         )

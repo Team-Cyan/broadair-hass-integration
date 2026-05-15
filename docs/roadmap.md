@@ -27,8 +27,9 @@
   - `broadair.set_frequency`
   - `broadair.refresh_realtime`
 - Verify command effects against actual device state. **Pending supervised live review.**
-- Add switch/number/button entities after service-level behavior is proven. **Done.**
-- Add cooldowns and command result refreshes. **Done.**
+- Add switch/number entities after service-level behavior is proven. **Done.**
+- Keep realtime refresh as an automatic post-command refresh and service action; no button entity. **Done.**
+- Add command serialization and command result refreshes. **Done.**
 
 ## Phase 3: Polish and distribution
 
