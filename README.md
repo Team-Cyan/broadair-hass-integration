@@ -2,9 +2,9 @@
 
 Custom Home Assistant integration for BROAD / Yuanda fresh air systems using the official BROAD AIR cloud API.
 
-The repository includes `custom_components/broadair/icon.png` and `logo.png`
-based on the official BROAD AIR app icon for Home Assistant and HACS
-presentation.
+The repository includes `custom_components/broadair/brand/icon.png` and
+`brand/logo.png` based on the official BROAD AIR app icon for Home Assistant
+and HACS presentation.
 
 ## Status
 
