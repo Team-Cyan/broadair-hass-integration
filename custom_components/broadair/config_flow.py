@@ -31,6 +31,7 @@ class BroadAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a BROAD AIR config flow."""
 
     VERSION = 1
+    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self,
@@ -79,6 +80,61 @@ class BroadAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
 
         return BroadAirOptionsFlow(config_entry)
+
+    async def async_step_reauth(
+        self,
+        entry_data: dict[str, Any],
+    ) -> config_entries.ConfigFlowResult:
+        """Handle reauthentication."""
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Confirm BROAD AIR reauthentication."""
+
+        if self._reauth_entry is None:
+            return self.async_abort(reason="reauth_entry_missing")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {**self._reauth_entry.data, **user_input}
+            try:
+                await _validate_input(self.hass, data)
+            except BroadAirAuthError:
+                errors["base"] = "invalid_auth"
+            except (BroadAirConnectionError, aiohttp.ClientError):
+                errors["base"] = "cannot_connect"
+            except BroadAirError:
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data=data,
+                )
+                await self.hass.config_entries.async_reload(
+                    self._reauth_entry.entry_id
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=self._reauth_entry.data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
 
 class BroadAirOptionsFlow(config_entries.OptionsFlow):

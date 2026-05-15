@@ -11,6 +11,14 @@
           "verify_ssl": "Verify SSL certificate",
           "scan_interval": "Scan interval in seconds"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate BROAD AIR",
+        "description": "Enter the current BROAD AIR account password.",
+        "data": {
+          "username": "Username or phone number",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -19,7 +27,9 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This BROAD AIR account is already configured."
+      "already_configured": "This BROAD AIR account is already configured.",
+      "reauth_entry_missing": "The BROAD AIR config entry is no longer available.",
+      "reauth_successful": "BROAD AIR reauthentication was successful."
     }
   },
   "options": {
@@ -57,6 +67,15 @@
       "online": { "name": "Online" },
       "running": { "name": "Running" },
       "fault": { "name": "Fault" }
+    },
+    "switch": {
+      "power": { "name": "Power" }
+    },
+    "number": {
+      "target_frequency": { "name": "Target frequency" }
+    },
+    "button": {
+      "refresh_realtime": { "name": "Refresh realtime data" }
     }
   }
 }

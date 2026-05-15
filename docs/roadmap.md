@@ -3,6 +3,7 @@
 ## Phase 1: Read-only integration
 
 - Create a standard Home Assistant custom integration repo.
+- Add thin `AGENTS.md`, `.agents/`, and `docs/` routing for future agent sessions. **Done.**
 - Reverse engineer enough of the official API to authenticate and read fresh air status.
 - Add UI setup with connection validation.
 - Discover fresh air devices from the cloud account.
@@ -26,13 +27,13 @@
   - `broadair.set_frequency`
   - `broadair.refresh_realtime`
 - Verify command effects against actual device state. **Pending supervised live review.**
-- Add switch/number entities after service-level behavior is proven.
+- Add switch/number/button entities after service-level behavior is proven. **Done.**
 - Add cooldowns and command result refreshes. **Done.**
 
 ## Phase 3: Polish and distribution
 
-- Add HACS metadata and release packaging.
-- Add diagnostics with sensitive fields redacted.
-- Add reauth flow for expired credentials.
-- Add translations for entity names and config errors.
+- Add HACS metadata and release packaging. **Done for custom repository install; pending official HACS default listing.**
+- Add diagnostics with sensitive fields redacted. **Done.**
+- Add reauth flow for expired credentials. **Done.**
+- Add translations for entity names and config errors. **Done.**
 - Expand tests with Home Assistant config flow coverage.

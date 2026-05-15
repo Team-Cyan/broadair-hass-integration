@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,34 +23,35 @@ def _truthy(value: Any) -> bool:
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
 
-@dataclass(slots=True, frozen=True)
-class BroadAirBinarySensorDescription:
+class BroadAirBinarySensorDescription(
+    BinarySensorEntityDescription, frozen_or_thawed=True
+):
     """Description for a BROAD AIR binary sensor."""
 
-    key: str
-    translation_key: str
-    name: str
     value_fn: Callable[[Any], bool]
-    device_class: BinarySensorDeviceClass | None = None
 
 
 BINARY_SENSORS: tuple[BroadAirBinarySensorDescription, ...] = (
     BroadAirBinarySensorDescription(
-        "online", "online", "Online", _truthy, BinarySensorDeviceClass.CONNECTIVITY
+        key="online",
+        translation_key="online",
+        name="Online",
+        value_fn=_truthy,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     BroadAirBinarySensorDescription(
-        "FREQUENCY_RUN",
-        "running",
-        "Running",
-        lambda value: float(value or 0) > 0,
-        BinarySensorDeviceClass.RUNNING,
+        key="FREQUENCY_RUN",
+        translation_key="running",
+        name="Running",
+        value_fn=lambda value: float(value or 0) > 0,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     BroadAirBinarySensorDescription(
-        "FAULT",
-        "fault",
-        "Fault",
-        lambda value: bool(str(value or "").strip()),
-        BinarySensorDeviceClass.PROBLEM,
+        key="FAULT",
+        translation_key="fault",
+        name="Fault",
+        value_fn=lambda value: bool(str(value or "").strip()),
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
 
