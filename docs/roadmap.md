@@ -19,15 +19,15 @@
 
 ## Phase 2: Safe control
 
-- Implement client methods for `SetFreshAir`.
-- Add service actions:
+- Implement client methods for `SetFreshAir`. **Done.**
+- Add service actions. **Done.**
   - `broadair.turn_on`
   - `broadair.turn_off`
   - `broadair.set_frequency`
   - `broadair.refresh_realtime`
-- Verify command effects against actual device state.
+- Verify command effects against actual device state. **Pending supervised live review.**
 - Add switch/number entities after service-level behavior is proven.
-- Add cooldowns and command result refreshes.
+- Add cooldowns and command result refreshes. **Done.**
 
 ## Phase 3: Polish and distribution
 

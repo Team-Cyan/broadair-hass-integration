@@ -12,10 +12,15 @@ Implemented:
 - Periodic status polling.
 - Sensors for common fresh air status values such as indoor/outdoor temperature, CO2, PM2.5, frequency, realtime air volume, humidity, and power/heat recovery metrics.
 - Binary sensors for online state, running state, and fault presence.
+- Explicit services for safe phase 2 control:
+  - `broadair.turn_on`
+  - `broadair.turn_off`
+  - `broadair.set_frequency`
+  - `broadair.refresh_realtime`
 
 Not implemented yet:
 
-- Device control entities or services. The official app exposes power and frequency commands, but those are intentionally deferred to phase 2.
+- Switch and number entities for direct UI control. Services come first so command behavior can be reviewed before optimistic entity controls are added.
 
 ## Install
 
@@ -46,6 +51,18 @@ Entity names depend on the device name reported by the cloud. The integration cu
 - Online
 - Fresh air running
 - Fault present
+
+## Services
+
+Service calls accept an optional `device_guid`. If your account has exactly one fresh air unit, you can omit it.
+
+```yaml
+service: broadair.set_frequency
+data:
+  frequency: 20
+```
+
+The integration waits for the command call to complete, applies a short command cooldown, and refreshes cloud state after each command. It does not assume optimistic success.
 
 ## Development
 

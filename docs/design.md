@@ -33,8 +33,8 @@ The client raises typed exceptions for authentication failures, API errors, malf
 
 Control should be added in small steps:
 
-1. Add explicit service actions for power on, power off, refresh realtime data, and set frequency.
+1. Add explicit service actions for power on, power off, refresh realtime data, and set frequency. Done in phase 2.
 2. Add a switch entity only after service actions are verified.
 3. Add a number/select entity for frequency or mode only after the command value range is confirmed on real hardware.
-4. Add command cooldown and optimistic-state avoidance. Every command should trigger a refresh and trust the cloud response instead of assuming success.
+4. Add command cooldown and optimistic-state avoidance. Every command should trigger a refresh and trust the cloud response instead of assuming success. Done for service actions.
 5. Keep potentially complex automatic tuning commands behind services until their tuple format is fully documented.

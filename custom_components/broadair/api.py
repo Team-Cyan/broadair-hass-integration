@@ -14,6 +14,10 @@ import aiohttp
 
 APP_TOKEN = "8q7l82AxXB8Qo99vesUUvy1ED5tIuPT31NoIL6ZE5THH7clkfN"
 FRESH_AIR_EQ_TYPE = "02"
+OPERATION_REFRESH_REALTIME = "1"
+OPERATION_TURN_OFF = "2"
+OPERATION_TURN_ON = "3"
+OPERATION_SET_FREQUENCY = "4"
 
 
 class BroadAirError(Exception):
@@ -186,6 +190,68 @@ class BroadAirApiClient:
         if not isinstance(parsed, dict):
             raise BroadAirDataError("Fresh air status is not an object")
         return parsed
+
+    async def refresh_fresh_air_realtime(
+        self, device_guid: str
+    ) -> dict[str, Any] | None:
+        """Ask the device for realtime data through the control endpoint."""
+
+        result = await self.set_fresh_air_control(
+            device_guid,
+            operation=OPERATION_REFRESH_REALTIME,
+            value=str(int(time.time() * 1000)),
+        )
+        parsed = parse_wrapped_json(result)
+        if parsed is None:
+            return None
+        if not isinstance(parsed, dict):
+            raise BroadAirDataError("Realtime refresh did not return an object")
+        return parsed
+
+    async def turn_on_fresh_air(self, device_guid: str) -> Any:
+        """Turn on a fresh air unit."""
+
+        return await self.set_fresh_air_control(
+            device_guid,
+            operation=OPERATION_TURN_ON,
+            value="",
+        )
+
+    async def turn_off_fresh_air(self, device_guid: str) -> Any:
+        """Turn off a fresh air unit."""
+
+        return await self.set_fresh_air_control(
+            device_guid,
+            operation=OPERATION_TURN_OFF,
+            value="",
+        )
+
+    async def set_fresh_air_frequency(self, device_guid: str, frequency: int) -> Any:
+        """Set a fresh air unit frequency."""
+
+        return await self.set_fresh_air_control(
+            device_guid,
+            operation=OPERATION_SET_FREQUENCY,
+            value=str(frequency),
+        )
+
+    async def set_fresh_air_control(
+        self,
+        device_guid: str,
+        *,
+        operation: str,
+        value: str,
+    ) -> Any:
+        """Send a raw `SetFreshAir` operation."""
+
+        return await self._request(
+            "Equipment/SetFreshAir",
+            {
+                "eq_guid": device_guid,
+                "sjx": operation,
+                "cs": value,
+            },
+        )
 
     async def _request(
         self,

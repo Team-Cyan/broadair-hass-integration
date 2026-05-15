@@ -1,0 +1,53 @@
+turn_on:
+  name: Turn on
+  description: Turn on a BROAD AIR fresh air unit, then refresh cloud state.
+  fields:
+    device_guid:
+      name: Device GUID
+      description: BROAD AIR device GUID. Can be omitted when only one device exists.
+      example: "00000000-0000-0000-0000-000000000000"
+      selector:
+        text:
+
+turn_off:
+  name: Turn off
+  description: Turn off a BROAD AIR fresh air unit, then refresh cloud state.
+  fields:
+    device_guid:
+      name: Device GUID
+      description: BROAD AIR device GUID. Can be omitted when only one device exists.
+      example: "00000000-0000-0000-0000-000000000000"
+      selector:
+        text:
+
+set_frequency:
+  name: Set frequency
+  description: Set the fan frequency for a BROAD AIR fresh air unit.
+  fields:
+    device_guid:
+      name: Device GUID
+      description: BROAD AIR device GUID. Can be omitted when only one device exists.
+      example: "00000000-0000-0000-0000-000000000000"
+      selector:
+        text:
+    frequency:
+      name: Frequency
+      description: Target frequency value sent to the official cloud API.
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+refresh_realtime:
+  name: Refresh realtime
+  description: Ask the official cloud API for realtime device data, then refresh Home Assistant state.
+  fields:
+    device_guid:
+      name: Device GUID
+      description: BROAD AIR device GUID. Can be omitted when only one device exists.
+      example: "00000000-0000-0000-0000-000000000000"
+      selector:
+        text:

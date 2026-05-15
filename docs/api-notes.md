@@ -155,3 +155,5 @@ Operations observed in the official app:
 - `23`: enable automatic CO2/freshness tuning path
 
 Control is intentionally deferred because it changes device state and needs more guardrails and live review.
+
+Phase 2 now wraps the low-risk control surface in explicit Home Assistant services. Live mutation of real hardware should still be reviewed deliberately before adding direct switch or number entities.

@@ -39,3 +39,10 @@ def test_parse_wrapped_json_list() -> None:
 def test_parse_wrapped_json_rejects_bad_json() -> None:
     with pytest.raises(api.BroadAirDataError):
         api.parse_wrapped_json("{bad")
+
+
+def test_control_operation_constants() -> None:
+    assert api.OPERATION_REFRESH_REALTIME == "1"
+    assert api.OPERATION_TURN_OFF == "2"
+    assert api.OPERATION_TURN_ON == "3"
+    assert api.OPERATION_SET_FREQUENCY == "4"

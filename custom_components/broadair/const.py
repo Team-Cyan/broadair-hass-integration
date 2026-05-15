@@ -15,3 +15,11 @@ CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VERIFY_SSL = "verify_ssl"
 
 PLATFORMS = ["sensor", "binary_sensor"]
+
+ATTR_DEVICE_GUID = "device_guid"
+ATTR_FREQUENCY = "frequency"
+
+SERVICE_REFRESH_REALTIME = "refresh_realtime"
+SERVICE_SET_FREQUENCY = "set_frequency"
+SERVICE_TURN_OFF = "turn_off"
+SERVICE_TURN_ON = "turn_on"

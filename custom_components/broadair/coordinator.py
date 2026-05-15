@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -56,6 +59,7 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
             verify_ssl=DEFAULT_VERIFY_SSL if verify_ssl is None else verify_ssl,
         )
         self.devices: list[BroadAirDevice] = []
+        self._last_command_at = 0.0
 
     async def _async_update_data(self) -> dict[str, BroadAirDeviceState]:
         try:
@@ -68,6 +72,63 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
             return result
         except BroadAirError as err:
             raise UpdateFailed(str(err)) from err
+
+    def resolve_device_guid(self, device_guid: str | None) -> str:
+        """Resolve an optional service device GUID."""
+
+        if device_guid:
+            if any(device.guid == device_guid for device in self.devices):
+                return device_guid
+            raise HomeAssistantError(f"Unknown BROAD AIR device: {device_guid}")
+        if len(self.devices) == 1:
+            return self.devices[0].guid
+        raise HomeAssistantError("device_guid is required when multiple devices exist")
+
+    async def async_turn_on(self, device_guid: str | None = None) -> None:
+        """Turn on a fresh air unit and refresh state."""
+
+        guid = self.resolve_device_guid(device_guid)
+        await self._run_control_command(lambda: self.client.turn_on_fresh_air(guid))
+
+    async def async_turn_off(self, device_guid: str | None = None) -> None:
+        """Turn off a fresh air unit and refresh state."""
+
+        guid = self.resolve_device_guid(device_guid)
+        await self._run_control_command(lambda: self.client.turn_off_fresh_air(guid))
+
+    async def async_set_frequency(
+        self,
+        frequency: int,
+        device_guid: str | None = None,
+    ) -> None:
+        """Set fresh air unit frequency and refresh state."""
+
+        guid = self.resolve_device_guid(device_guid)
+        await self._run_control_command(
+            lambda: self.client.set_fresh_air_frequency(guid, frequency)
+        )
+
+    async def async_refresh_realtime(self, device_guid: str | None = None) -> None:
+        """Request realtime data and refresh state."""
+
+        guid = self.resolve_device_guid(device_guid)
+        await self._run_control_command(
+            lambda: self.client.refresh_fresh_air_realtime(guid)
+        )
+
+    async def _run_control_command(self, command: Callable[[], Awaitable[Any]]) -> None:
+        """Run a control command with a small cooldown, then refresh state."""
+
+        now = time.monotonic()
+        cooldown_remaining = 2.0 - (now - self._last_command_at)
+        if cooldown_remaining > 0:
+            raise HomeAssistantError("BROAD AIR command cooldown is still active")
+        try:
+            await command()
+            self._last_command_at = time.monotonic()
+            await self.async_request_refresh()
+        except BroadAirError as err:
+            raise HomeAssistantError(str(err)) from err
 
 
 def coordinator_from_config_entry(hass: HomeAssistant, entry) -> BroadAirCoordinator:
