@@ -93,6 +93,17 @@ Entity names depend on the device name reported by the cloud. The integration cu
 - Power switch
 - Target frequency
 
+Some rarely useful or model-dependent sensors are disabled by default, but can
+be manually enabled from Home Assistant entity settings:
+
+- Secondary indoor temperature
+- Supply air temperature
+- Indoor humidity
+- Supply air humidity
+- Indoor PM2.5
+- Set frequency sensor
+- Realtime heat recovery
+
 ## Services
 
 Service calls accept an optional `device_guid`. If your account has exactly one fresh air unit, you can omit it.

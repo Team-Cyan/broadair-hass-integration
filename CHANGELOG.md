@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 - 2026-05-17
+
+- Disable placeholder or low-value SQ260 sensors by default while keeping them
+  available for manual opt-in from Home Assistant entity settings.
+
 ## 0.2.2 - 2026-05-15
 
 - Resolve target frequency ranges per device from options, API status fields,

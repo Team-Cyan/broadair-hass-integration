@@ -140,6 +140,10 @@ Observed status cleanup in the Home Assistant integration:
 - The device list can report `online=0` even while status polling succeeds. The
   Home Assistant online binary sensor therefore represents coordinator polling
   success, not the stale list flag.
+- Secondary indoor temperature, supply air temperature, humidity sensors,
+  indoor PM2.5, set frequency, and realtime heat recovery are disabled by
+  default for this model because they are placeholders, duplicate controls, or
+  niche diagnostics in current live data.
 
 ## Control API For Phase 2
 
