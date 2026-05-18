@@ -1,100 +1,127 @@
 # BROAD AIR for Home Assistant
 
-Custom Home Assistant integration for BROAD / Yuanda fresh air systems using the official BROAD AIR cloud API.
+Home Assistant custom integration for BROAD / Yuanda fresh air systems.
 
-The repository includes `custom_components/broadair/brand/icon.png` and
-`brand/logo.png` based on the official BROAD AIR app icon for Home Assistant
-and HACS presentation.
+This integration connects Home Assistant to the official BROAD AIR cloud API,
+discovers fresh air units bound to your account, exposes useful sensors, and
+adds basic controls for power and target fan frequency.
 
-## Status
+It has been developed against a real BROAD AIR account and an `SQ260` fresh air
+unit. Other models should be treated as community-tested until their capabilities
+are confirmed.
 
-Implemented:
+## Features
 
-- UI config flow with username and password.
-- Options flow for API URL, SSL verification, and scan interval.
-- Reauthentication flow for expired or changed credentials.
-- Cloud login using the official app signing scheme.
-- Device list discovery for fresh air units.
-- Periodic status polling, plus an automatic delayed refresh after commands.
-- Sensors for common fresh air status values such as indoor/outdoor temperature, CO2, PM2.5, frequency, realtime air volume, humidity, and power/heat recovery metrics.
-- Binary sensors for online state, running state, and fault presence.
-- UI controls:
-  - power switch
-  - target frequency number
-- Explicit services:
-  - `broadair.turn_on`
-  - `broadair.turn_off`
-  - `broadair.set_frequency`
-  - `broadair.refresh_realtime`
+- Home Assistant UI setup flow.
+- BROAD AIR cloud login using the official app signing scheme.
+- Automatic recovery when the cloud invalidates an existing session token.
+- Device discovery for fresh air units.
+- Periodic polling with automatic post-command refresh.
+- Useful sensors for temperature, CO2, PM2.5, air volume, power, running state,
+  and fault state.
+- Power switch.
+- Target frequency number entity.
+- Device-specific frequency range resolver:
+  - options override
+  - API status fields when available
+  - known model table, including `SQ260`
+  - safe fallback range
 - Diagnostics with sensitive fields redacted.
+- HACS custom repository metadata.
+- Brand icon and logo under `custom_components/broadair/brand/`.
 
-Not implemented yet:
-
-- Official HACS default repository listing. Install through HACS as a custom repository for now.
-- Broad live-device control matrix. Basic login and status reads are verified; control commands should still be reviewed on the actual unit before heavy automation.
-
-## Install
+## Installation
 
 ### HACS custom repository
 
-1. Open HACS.
-2. Go to **Integrations**.
-3. Open the menu and choose **Custom repositories**.
-4. Add `https://github.com/Team-Cyan/broadair-hass-integration`.
-5. Select category **Integration**.
-6. Install **BROAD AIR**.
-7. Restart Home Assistant.
-8. Add the integration from **Settings -> Devices & services -> Add integration -> BROAD AIR**.
+This repository is not yet listed in the default HACS store. Add it as a custom
+repository:
+
+1. Open Home Assistant.
+2. Open **HACS**.
+3. Go to **Integrations**.
+4. Open the menu in the top-right corner.
+5. Choose **Custom repositories**.
+6. Add this repository URL:
+
+   ```text
+   https://github.com/Team-Cyan/broadair-hass-integration
+   ```
+
+7. Set category to **Integration**.
+8. Click **Add**.
+9. Search for **BROAD AIR** in HACS and install it.
+10. Restart Home Assistant.
+11. Go to **Settings -> Devices & services -> Add integration**.
+12. Search for **BROAD AIR** and follow the setup flow.
 
 ### Manual install
 
-Copy `custom_components/broadair` into your Home Assistant `custom_components`
-directory, restart Home Assistant, then add the integration from
-**Settings -> Devices & services -> Add integration -> BROAD AIR**.
+1. Download or clone this repository.
+2. Copy this directory:
 
-## Setup values
+   ```text
+   custom_components/broadair
+   ```
 
-- **Username or phone number**: your BROAD AIR account, usually the phone number used by the official app.
-- **Password**: your BROAD AIR account password.
-- **API base URL**: keep the default `https://broadcleanair.net:8103`.
-- **Verify SSL certificate**: keep disabled for the default host because the official endpoint currently serves a certificate that does not match `broadcleanair.net`.
-- **Scan interval**: default `60` seconds. The allowed range is 30 to 3600 seconds.
-- **Minimum/maximum frequency override**: keep both values at `0` for automatic
-  detection. The integration checks API status fields first, then known model
-  ranges such as `SQ260`, then falls back to a broad default.
+3. Into your Home Assistant config directory:
 
-The official Android app currently uses `https://broadcleanair.net:8103`. Its TLS certificate does not match that host, so this integration exposes a setup option to disable SSL verification for this API host. Keep the default unless your environment requires stricter handling.
+   ```text
+   <home-assistant-config>/custom_components/broadair
+   ```
 
-The official API has a narrow login timestamp window. The integration signs login requests with the API server time when available, which avoids false authentication failures on Home Assistant hosts with small clock drift.
+4. Restart Home Assistant.
+5. Go to **Settings -> Devices & services -> Add integration**.
+6. Search for **BROAD AIR** and follow the setup flow.
 
-## Supported entities
+For Docker-based Home Assistant installations, the config directory is usually
+mounted as `/config` inside the container.
 
-Entity names depend on the device name reported by the cloud. The integration currently exposes:
+## Setup
+
+The setup flow asks for these values:
+
+| Field | Recommended value |
+| --- | --- |
+| Username or phone number | Your BROAD AIR account phone number or username |
+| Password | Your BROAD AIR account password |
+| API base URL | Keep `https://broadcleanair.net:8103` |
+| Verify SSL certificate | Keep disabled for the default API host |
+| Scan interval | Keep `60` seconds unless you need slower polling |
+| Minimum frequency override | Keep `0` for automatic detection |
+| Maximum frequency override | Keep `0` for automatic detection |
+
+The official Android app currently uses `https://broadcleanair.net:8103`. The
+TLS certificate served by that endpoint does not match the hostname, so SSL
+verification is disabled by default for compatibility with the official API host.
+
+The login API also has a narrow timestamp window. The integration signs login
+requests with the BROAD AIR server time when available, which avoids false
+authentication failures on Home Assistant hosts with small clock drift.
+
+## Entities
+
+Entity names depend on the device name returned by the BROAD AIR cloud.
+
+Enabled by default:
 
 - Indoor temperature
-- Secondary indoor temperature
 - Outdoor temperature
 - Fresh air temperature
 - Exhaust temperature
-- Supply air temperature
-- Indoor humidity
-- Supply air humidity
-- CO2 concentration
+- CO2
 - Outdoor PM2.5
-- Indoor PM2.5
 - Realtime air volume
 - Running frequency
-- Set frequency
 - Realtime power
-- Realtime heat recovery
 - Online
-- Fresh air running
-- Fault present
+- Running
+- Fault
 - Power switch
 - Target frequency
 
-Some rarely useful or model-dependent sensors are disabled by default, but can
-be manually enabled from Home Assistant entity settings:
+Disabled by default, but available for manual opt-in from Home Assistant entity
+settings:
 
 - Secondary indoor temperature
 - Supply air temperature
@@ -104,9 +131,22 @@ be manually enabled from Home Assistant entity settings:
 - Set frequency sensor
 - Realtime heat recovery
 
+These disabled entities are model-dependent, diagnostic, duplicated by a control
+entity, or placeholder-like on the verified `SQ260` device.
+
 ## Services
 
-Service calls accept an optional `device_guid`. If your account has exactly one fresh air unit, you can omit it.
+The integration also registers service actions:
+
+- `broadair.turn_on`
+- `broadair.turn_off`
+- `broadair.set_frequency`
+- `broadair.refresh_realtime`
+
+If your BROAD AIR account has exactly one fresh air unit, `device_guid` can be
+omitted.
+
+Example:
 
 ```yaml
 service: broadair.set_frequency
@@ -114,9 +154,52 @@ data:
   frequency: 20
 ```
 
-The integration waits for the command call to complete, serializes rapid
-commands instead of failing with a cooldown error, and refreshes cloud state
-after each command. It does not assume optimistic success.
+Control commands are serialized, so rapid UI changes do not fail with cooldown
+errors. After each command, the integration refreshes cloud state immediately
+and schedules a second delayed refresh.
+
+## Frequency Range
+
+Target frequency range is resolved per device:
+
+1. Manual options override, when both min and max are set.
+2. API status fields, if the cloud exposes a valid range.
+3. Known model capabilities, currently including `SQ260` and `SQ260-C1` as
+   `20-50 Hz`.
+4. Default fallback `0-100 Hz` for unknown models.
+
+If your model has a different safe range, set **Minimum frequency override** and
+**Maximum frequency override** in the integration options.
+
+## Troubleshooting
+
+### Invalid authentication
+
+Check username and password first. If credentials are correct, verify that the
+Home Assistant host time is accurate. BROAD AIR login signatures are
+time-sensitive.
+
+### Token forced logout
+
+The official app and Home Assistant may invalidate each other's session token
+when the same account logs in from multiple places. The integration detects this
+and automatically logs in again once before retrying the failed request.
+
+### Icon does not appear
+
+The icon and logo are included under:
+
+```text
+custom_components/broadair/brand/
+```
+
+After installing or updating, restart Home Assistant and hard-refresh the browser
+or restart the mobile app to clear frontend cache.
+
+### SSL errors
+
+Keep **Verify SSL certificate** disabled when using the default API host. Enable
+it only if you are using an endpoint with a matching certificate.
 
 ## Development
 
@@ -126,16 +209,21 @@ python3 -m venv .venv
 pip install -e ".[test]"
 pytest
 ruff check .
+python3 -m compileall -q custom_components tests
 ```
 
-## Release checklist
+## Release Checklist
 
 1. Update `custom_components/broadair/manifest.json`.
 2. Update `pyproject.toml`.
-3. Move the matching `CHANGELOG.md` section out of `Unreleased`.
+3. Update `CHANGELOG.md`.
 4. Run `ruff`, `pytest`, and `compileall`.
-5. Tag the release as `vX.Y.Z` and publish a GitHub release.
+5. Tag the release as `vX.Y.Z`.
+6. Publish a GitHub release.
 
-## Roadmap
+## Documentation
 
-See [docs/roadmap.md](docs/roadmap.md).
+- [Roadmap](docs/roadmap.md)
+- [Design](docs/design.md)
+- [API notes](docs/api-notes.md)
+- [Changelog](CHANGELOG.md)
