@@ -1,154 +1,140 @@
 # BROAD AIR for Home Assistant
 
-[中文说明](README.zh-CN.md)
+[English README](README.en.md)
 
-Home Assistant custom integration for BROAD / Yuanda fresh air systems.
+这是一个面向 BROAD / 远大新风系统的 Home Assistant 自定义集成。
 
-This integration connects Home Assistant to the official BROAD AIR cloud API,
-discovers fresh air units bound to your account, exposes useful sensors, and
-adds basic controls for power and target fan frequency.
+它通过远大官方 BROAD AIR 云 API 登录账号、发现账号下的新风设备、暴露常用传感器，并提供基础的新风机开关和目标频率控制。
 
-It has been developed against a real BROAD AIR account and an `SQ260` fresh air
-unit. Other models should be treated as community-tested until their capabilities
-are confirmed.
+当前主要基于真实 BROAD AIR 账号和一台 `SQ260` 新风机开发验证。其他型号可以安装使用，但能力范围还需要社区或实机继续确认。
 
-## Features
+## 功能
 
-- Home Assistant UI setup flow.
-- BROAD AIR cloud login using the official app signing scheme.
-- Automatic recovery when the cloud invalidates an existing session token.
-- Device discovery for fresh air units.
-- Periodic polling with automatic post-command refresh.
-- Useful sensors for temperature, CO2, PM2.5, air volume, power, running state,
-  and fault state.
-- Power switch.
-- Target frequency number entity.
-- Device-specific frequency range resolver:
-  - options override
-  - API status fields when available
-  - known model table, including `SQ260`
-  - safe fallback range
-- Diagnostics with sensitive fields redacted.
-- HACS custom repository metadata.
-- Brand icon and logo under `custom_components/broadair/brand/`.
+- Home Assistant UI 配置流程。
+- 使用官方 App 同款签名方式登录 BROAD AIR 云 API。
+- 当云端让旧 token 失效时自动重新登录并重试一次。
+- 自动发现账号下的新风设备。
+- 周期轮询状态，并在控制命令后自动刷新状态。
+- 暴露温度、CO2、PM2.5、风量、功率、运行状态、故障状态等常用实体。
+- 电源开关实体。
+- 目标频率 number 实体。
+- 按设备解析频率范围：
+  - 手动 options 覆盖
+  - API 状态字段
+  - 已知型号表，例如 `SQ260`
+  - 安全兜底范围
+- diagnostics 诊断信息会脱敏敏感字段。
+- 支持作为 HACS custom repository 安装。
+- 集成图标和 logo 位于 `custom_components/broadair/brand/`。
 
-## Installation
+## 安装
 
-### HACS custom repository
+### 通过 HACS custom repository 安装
 
-This repository is not yet listed in the default HACS store. Add it as a custom
-repository:
+这个仓库还没有进入 HACS 默认商店，需要先作为 custom repository 添加：
 
-1. Open Home Assistant.
-2. Open **HACS**.
-3. Go to **Integrations**.
-4. Open the menu in the top-right corner.
-5. Choose **Custom repositories**.
-6. Add this repository URL:
+1. 打开 Home Assistant。
+2. 打开 **HACS**。
+3. 进入 **Integrations**。
+4. 点击右上角菜单。
+5. 选择 **Custom repositories**。
+6. 添加仓库地址：
 
    ```text
    https://github.com/Team-Cyan/broadair-hass-integration
    ```
 
-7. Set category to **Integration**.
-8. Click **Add**.
-9. Search for **BROAD AIR** in HACS and install it.
-10. Restart Home Assistant.
-11. Go to **Settings -> Devices & services -> Add integration**.
-12. Search for **BROAD AIR** and follow the setup flow.
+7. Category 选择 **Integration**。
+8. 点击 **Add**。
+9. 在 HACS 里搜索并安装 **BROAD AIR**。
+10. 重启 Home Assistant。
+11. 进入 **设置 -> 设备与服务 -> 添加集成**。
+12. 搜索 **BROAD AIR**，按配置流程添加账号。
 
-### Manual install
+### 手动安装
 
-1. Download or clone this repository.
-2. Copy this directory:
+1. 下载或 clone 这个仓库。
+2. 复制目录：
 
    ```text
    custom_components/broadair
    ```
 
-3. Into your Home Assistant config directory:
+3. 放到你的 Home Assistant 配置目录：
 
    ```text
    <home-assistant-config>/custom_components/broadair
    ```
 
-4. Restart Home Assistant.
-5. Go to **Settings -> Devices & services -> Add integration**.
-6. Search for **BROAD AIR** and follow the setup flow.
+4. 重启 Home Assistant。
+5. 进入 **设置 -> 设备与服务 -> 添加集成**。
+6. 搜索 **BROAD AIR**，按配置流程添加账号。
 
-For Docker-based Home Assistant installations, the config directory is usually
-mounted as `/config` inside the container.
+如果你使用 Docker 版 Home Assistant，配置目录通常在容器内挂载为 `/config`。
 
-## Setup
+## 配置项
 
-The setup flow asks for these values:
+配置流程会要求填写这些字段：
 
-| Field | Recommended value |
+| 字段 | 推荐值 |
 | --- | --- |
-| Username or phone number | Your BROAD AIR account phone number or username |
-| Password | Your BROAD AIR account password |
-| API base URL | Keep `https://broadcleanair.net:8103` |
-| Verify SSL certificate | Keep disabled for the default API host |
-| Scan interval | Keep `60` seconds unless you need slower polling |
-| Minimum frequency override | Keep `0` for automatic detection |
-| Maximum frequency override | Keep `0` for automatic detection |
+| Username or phone number | 远大 BROAD AIR 账号手机号或用户名 |
+| Password | BROAD AIR 账号密码 |
+| API base URL | 保持默认 `https://broadcleanair.net:8103` |
+| Verify SSL certificate | 默认 API host 建议关闭 |
+| Scan interval | 默认 `60` 秒 |
+| Minimum frequency override | 保持 `0`，表示自动检测 |
+| Maximum frequency override | 保持 `0`，表示自动检测 |
 
-The official Android app currently uses `https://broadcleanair.net:8103`. The
-TLS certificate served by that endpoint does not match the hostname, so SSL
-verification is disabled by default for compatibility with the official API host.
+官方 Android App 当前使用 `https://broadcleanair.net:8103`。这个地址返回的 TLS 证书和 hostname 不匹配，所以集成为了兼容官方 API，默认关闭 SSL 证书校验。
 
-The login API also has a narrow timestamp window. The integration signs login
-requests with the BROAD AIR server time when available, which avoids false
-authentication failures on Home Assistant hosts with small clock drift.
+远大登录接口对时间戳比较敏感。集成会尽量使用 BROAD AIR 服务器时间生成登录签名，避免 Home Assistant 主机时间轻微漂移导致误报认证失败。
 
-## Entities
+## 实体
 
-Entity names depend on the device name returned by the BROAD AIR cloud.
+实体名称会根据云端返回的设备名生成。
 
-Enabled by default:
+默认启用：
 
-- Indoor temperature
-- Outdoor temperature
-- Fresh air temperature
-- Exhaust temperature
+- 室内温度
+- 室外温度
+- 新风温度
+- 排风温度
 - CO2
-- Outdoor PM2.5
-- Realtime air volume
-- Running frequency
-- Realtime power
-- Online
-- Running
-- Fault
-- Power switch
-- Target frequency
+- 室外 PM2.5
+- 实时风量
+- 当前运行频率
+- 实时功率
+- 在线状态
+- 运行状态
+- 故障状态
+- 电源开关
+- 目标频率
 
-Disabled by default, but available for manual opt-in from Home Assistant entity
-settings:
+默认不启用，但可以在 Home Assistant 实体设置里手动启用：
 
-- Secondary indoor temperature
-- Supply air temperature
-- Indoor humidity
-- Supply air humidity
-- Indoor PM2.5
-- Set frequency sensor
-- Realtime heat recovery
+- 第二室内温度
+- 送风温度
+- 室内湿度
+- 送风湿度
+- 室内 PM2.5
+- 设定频率传感器
+- 实时热回收
 
-These disabled entities are model-dependent, diagnostic, duplicated by a control
-entity, or placeholder-like on the verified `SQ260` device.
+这些默认隐藏的实体在已验证的 `SQ260` 上更像型号相关字段、诊断字段、控制实体的重复信息，或占位值。
 
-## Services
+## 服务
 
-The integration also registers service actions:
+集成注册了这些 service：
 
 - `broadair.turn_on`
 - `broadair.turn_off`
 - `broadair.set_frequency`
 - `broadair.refresh_realtime`
 
-If your BROAD AIR account has exactly one fresh air unit, `device_guid` can be
-omitted.
+如果账号里只有一台新风机，可以不填 `device_guid`。
 
-Example:
+示例：
 
 ```yaml
 service: broadair.set_frequency
@@ -156,54 +142,44 @@ data:
   frequency: 20
 ```
 
-Control commands are serialized, so rapid UI changes do not fail with cooldown
-errors. After each command, the integration refreshes cloud state immediately
-and schedules a second delayed refresh.
+控制命令会串行执行，所以快速拖动 UI 不会因为 cooldown 直接报错。每次控制后，集成会立即刷新云端状态，并安排一次延迟刷新。
 
-## Frequency Range
+## 频率范围
 
-Target frequency range is resolved per device:
+目标频率范围按每台设备解析：
 
-1. Manual options override, when both min and max are set.
-2. API status fields, if the cloud exposes a valid range.
-3. Known model capabilities, currently including `SQ260` and `SQ260-C1` as
-   `20-50 Hz`.
-4. Default fallback `0-100 Hz` for unknown models.
+1. 如果 options 里手动设置了 min/max，优先使用。
+2. 如果云端状态字段提供有效范围，使用 API 字段。
+3. 使用已知型号表，目前 `SQ260` 和 `SQ260-C1` 是 `20-50 Hz`。
+4. 未知型号兜底为 `0-100 Hz`。
 
-If your model has a different safe range, set **Minimum frequency override** and
-**Maximum frequency override** in the integration options.
+如果你的型号安全范围不同，可以在集成 options 里设置 **Minimum frequency override** 和 **Maximum frequency override**。
 
-## Troubleshooting
+## 常见问题
 
-### Invalid authentication
+### invalid_auth
 
-Check username and password first. If credentials are correct, verify that the
-Home Assistant host time is accurate. BROAD AIR login signatures are
-time-sensitive.
+先检查账号密码。如果账号密码正确，再检查 Home Assistant 主机时间是否准确。BROAD AIR 登录签名对时间比较敏感。
 
-### Token forced logout
+### token 被强制下线
 
-The official app and Home Assistant may invalidate each other's session token
-when the same account logs in from multiple places. The integration detects this
-and automatically logs in again once before retrying the failed request.
+官方 App 和 Home Assistant 使用同一个账号时，可能互相让对方的 session token 失效。集成会检测这种情况，并自动重新登录一次后重试请求。
 
-### Icon does not appear
+### 图标不显示
 
-The icon and logo are included under:
+图标和 logo 位于：
 
 ```text
 custom_components/broadair/brand/
 ```
 
-After installing or updating, restart Home Assistant and hard-refresh the browser
-or restart the mobile app to clear frontend cache.
+安装或更新后请重启 Home Assistant，并在浏览器里硬刷新页面，或完全重启 Home Assistant 手机 App 来清理前端缓存。
 
-### SSL errors
+### SSL 报错
 
-Keep **Verify SSL certificate** disabled when using the default API host. Enable
-it only if you are using an endpoint with a matching certificate.
+使用默认 API host 时，请保持 **Verify SSL certificate** 关闭。只有在你使用证书匹配的 API endpoint 时，才建议打开。
 
-## Development
+## 开发
 
 ```bash
 python3 -m venv .venv
@@ -214,16 +190,16 @@ ruff check .
 python3 -m compileall -q custom_components tests
 ```
 
-## Release Checklist
+## 发布检查
 
-1. Update `custom_components/broadair/manifest.json`.
-2. Update `pyproject.toml`.
-3. Update `CHANGELOG.md`.
-4. Run `ruff`, `pytest`, and `compileall`.
-5. Tag the release as `vX.Y.Z`.
-6. Publish a GitHub release.
+1. 更新 `custom_components/broadair/manifest.json`。
+2. 更新 `pyproject.toml`。
+3. 更新 `CHANGELOG.md`。
+4. 运行 `ruff`、`pytest` 和 `compileall`。
+5. 打 tag，例如 `vX.Y.Z`。
+6. 发布 GitHub release。
 
-## Documentation
+## 文档
 
 - [Roadmap](docs/roadmap.md)
 - [Design](docs/design.md)
