@@ -1,5 +1,7 @@
 # BROAD AIR for Home Assistant
 
+[中文说明](README.zh-CN.md)
+
 Home Assistant custom integration for BROAD / Yuanda fresh air systems.
 
 This integration connects Home Assistant to the official BROAD AIR cloud API,
