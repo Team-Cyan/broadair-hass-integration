@@ -18,7 +18,7 @@ are confirmed.
 - BROAD AIR cloud login using the official app signing scheme.
 - Automatic recovery when the cloud invalidates an existing session token.
 - Device discovery for fresh air units.
-- Periodic polling with automatic post-command refresh.
+- Periodic polling with realtime post-command refresh.
 - Useful sensors for temperature, CO2, PM2.5, air volume, power, running state,
   and fault state.
 - Power switch.
@@ -157,8 +157,9 @@ data:
 ```
 
 Control commands are serialized, so rapid UI changes do not fail with cooldown
-errors. After each command, the integration refreshes cloud state immediately
-and schedules a second delayed refresh.
+errors. After each command, the integration applies the realtime refresh payload
+directly to the Home Assistant cache when available and schedules a delayed
+realtime refresh, reducing lag from cached status responses.
 
 ## Frequency Range
 

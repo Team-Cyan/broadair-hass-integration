@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
+from .state import merge_status_snapshot
 
 COMMAND_COOLDOWN_SECONDS = 2.0
 COMMAND_SETTLE_REFRESH_SECONDS = 5.0
@@ -100,13 +101,19 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
         """Turn on a fresh air unit and refresh state."""
 
         guid = self.resolve_device_guid(device_guid)
-        await self._run_control_command(lambda: self.client.turn_on_fresh_air(guid))
+        await self._run_control_command(
+            lambda: self.client.turn_on_fresh_air(guid),
+            device_guid=guid,
+        )
 
     async def async_turn_off(self, device_guid: str | None = None) -> None:
         """Turn off a fresh air unit and refresh state."""
 
         guid = self.resolve_device_guid(device_guid)
-        await self._run_control_command(lambda: self.client.turn_off_fresh_air(guid))
+        await self._run_control_command(
+            lambda: self.client.turn_off_fresh_air(guid),
+            device_guid=guid,
+        )
 
     async def async_set_frequency(
         self,
@@ -123,7 +130,8 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
                 f"{frequency_range.minimum} and {frequency_range.maximum} Hz"
             )
         await self._run_control_command(
-            lambda: self.client.set_fresh_air_frequency(guid, frequency)
+            lambda: self.client.set_fresh_air_frequency(guid, frequency),
+            device_guid=guid,
         )
 
     def frequency_range(self, device_guid: str) -> FrequencyRange:
@@ -143,10 +151,16 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
 
         guid = self.resolve_device_guid(device_guid)
         await self._run_control_command(
-            lambda: self.client.refresh_fresh_air_realtime(guid)
+            lambda: self.client.refresh_fresh_air_realtime(guid),
+            device_guid=guid,
         )
 
-    async def _run_control_command(self, command: Callable[[], Awaitable[Any]]) -> None:
+    async def _run_control_command(
+        self,
+        command: Callable[[], Awaitable[Any]],
+        *,
+        device_guid: str,
+    ) -> None:
         """Run a control command serially, then refresh state."""
 
         async with self._command_lock:
@@ -157,18 +171,48 @@ class BroadAirCoordinator(DataUpdateCoordinator[dict[str, BroadAirDeviceState]])
             if cooldown_remaining > 0:
                 await asyncio.sleep(cooldown_remaining)
             try:
-                await command()
+                result = await command()
                 self._last_command_at = time.monotonic()
-                await self.async_request_refresh()
-                self.hass.async_create_task(self._async_delayed_refresh())
+                if not self._apply_realtime_status(device_guid, result):
+                    await self.async_request_refresh()
+                self.hass.async_create_task(self._async_delayed_refresh(device_guid))
             except BroadAirError as err:
                 raise HomeAssistantError(str(err)) from err
 
-    async def _async_delayed_refresh(self) -> None:
+    def _apply_realtime_status(self, device_guid: str, status: Any) -> bool:
+        """Apply a realtime status payload to coordinator data."""
+
+        if not isinstance(status, dict):
+            return False
+        device = next(
+            (candidate for candidate in self.devices if candidate.guid == device_guid),
+            None,
+        )
+        if device is None:
+            return False
+        current_data = dict(self.data or {})
+        current_state = current_data.get(device_guid)
+        current_data[device_guid] = BroadAirDeviceState(
+            device=device,
+            status=merge_status_snapshot(
+                current_state.status if current_state else None,
+                status,
+            ),
+        )
+        self.async_set_updated_data(current_data)
+        return True
+
+    async def _async_delayed_refresh(self, device_guid: str) -> None:
         """Refresh again after the cloud/device state has had time to settle."""
 
         await asyncio.sleep(COMMAND_SETTLE_REFRESH_SECONDS)
-        await self.async_request_refresh()
+        try:
+            status = await self.client.refresh_fresh_air_realtime(device_guid)
+        except BroadAirError:
+            await self.async_request_refresh()
+            return
+        if not self._apply_realtime_status(device_guid, status):
+            await self.async_request_refresh()
 
 
 def coordinator_from_config_entry(hass: HomeAssistant, entry) -> BroadAirCoordinator:

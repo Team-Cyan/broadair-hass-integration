@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.4 - 2026-06-26
+
+- Apply realtime refresh payloads directly to the coordinator state cache after
+  control commands.
+- Use the realtime refresh endpoint for delayed post-command refreshes so power,
+  running, airflow, and realtime power entities recover faster from cached
+  status responses.
+
 ## 0.2.3 - 2026-05-17
 
 - Disable placeholder or low-value SQ260 sensors by default while keeping them

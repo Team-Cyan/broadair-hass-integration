@@ -37,4 +37,7 @@ Control should be added in small steps:
 2. Add a switch entity only after service actions are verified.
 3. Add a number/select entity for frequency or mode only after the command value range is confirmed on real hardware.
 4. Add command cooldown and optimistic-state avoidance. Every command should trigger a refresh and trust the cloud response instead of assuming success. Done for service actions.
+   Realtime refresh payloads are applied directly to the coordinator cache when
+   available, keeping the integration non-optimistic while avoiding the slower
+   normal status endpoint cache after control commands.
 5. Keep potentially complex automatic tuning commands behind services until their tuple format is fully documented.

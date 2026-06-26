@@ -172,6 +172,12 @@ Operations observed in the official app:
 - `20`: update automatic tuning configuration
 - `23`: enable automatic CO2/freshness tuning path
 
+The realtime operation can return a fresh status payload in the same wrapped
+response shape as normal status reads. The Home Assistant integration applies
+that payload directly to the coordinator cache after control commands and uses
+the same realtime operation for delayed post-command refreshes, while retaining
+normal status polling as the fallback path.
+
 ## Frequency Range Capability
 
 `GetFreshAirStatus` did not expose frequency min/max fields on the verified
