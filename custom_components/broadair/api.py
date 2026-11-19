@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
+import logging
 import random
 import time
 from collections.abc import Mapping
@@ -14,11 +16,23 @@ from typing import Any
 import aiohttp
 
 APP_TOKEN = "8q7l82AxXB8Qo99vesUUvy1ED5tIuPT31NoIL6ZE5THH7clkfN"
+_LOGGER = logging.getLogger(__name__)
+_REQUEST_ATTEMPTS = 2
+_RETRY_DELAY_SECONDS = 2
+_RETRYABLE_READ_STATUSES = {502, 503, 504}
+_READ_ENDPOINTS = {"Equipment/GetEquipmentsList", "Equipment/GetFreshAirStatus"}
+
 FRESH_AIR_EQ_TYPE = "02"
 OPERATION_REFRESH_REALTIME = "1"
 OPERATION_TURN_OFF = "2"
 OPERATION_TURN_ON = "3"
 OPERATION_SET_FREQUENCY = "4"
+_CONTROL_OPERATIONS = {
+    OPERATION_REFRESH_REALTIME: "refresh_realtime",
+    OPERATION_TURN_OFF: "turn_off",
+    OPERATION_TURN_ON: "turn_on",
+    OPERATION_SET_FREQUENCY: "set_frequency",
+}
 
 
 class BroadAirError(Exception):
@@ -287,23 +301,7 @@ class BroadAirApiClient:
             if not self._token:
                 await self.login()
             headers["token"] = self._token or ""
-        url = f"{self._base_url}/api/{path}"
-        try:
-            async with self._session.post(
-                url,
-                json=dict(payload),
-                headers=headers,
-                ssl=self._verify_ssl,
-                timeout=aiohttp.ClientTimeout(total=30),
-            ) as response:
-                response.raise_for_status()
-                envelope = await response.json(content_type=None)
-        except TimeoutError as err:
-            raise BroadAirConnectionError(
-                "Timed out connecting to BROAD AIR API"
-            ) from err
-        except aiohttp.ClientError as err:
-            raise BroadAirConnectionError("Could not connect to BROAD AIR API") from err
+        envelope = await self._post(path, payload, headers)
 
         if not isinstance(envelope, dict):
             raise BroadAirDataError("API response is not an object")
@@ -329,3 +327,83 @@ class BroadAirApiClient:
         if not isinstance(body, dict):
             raise BroadAirDataError("API response is missing Body")
         return body.get("Data")
+
+    async def _post(
+        self, path: str, payload: Mapping[str, Any], headers: Mapping[str, str]
+    ) -> Any:
+        operation = path
+        if path == "Equipment/SetFreshAir":
+            operation = _CONTROL_OPERATIONS.get(str(payload.get("sjx")), "control")
+        read_only = path in _READ_ENDPOINTS
+        url = f"{self._base_url}/api/{path}"
+
+        for attempt in range(1, _REQUEST_ATTEMPTS + 1):
+            started = time.monotonic()
+            stage = "request_or_response_headers"
+            try:
+                async with self._session.post(
+                    url,
+                    json=dict(payload),
+                    headers=headers,
+                    ssl=self._verify_ssl,
+                    allow_redirects=False,
+                    timeout=aiohttp.ClientTimeout(total=30, connect=10),
+                ) as response:
+                    stage = "http_status"
+                    if 300 <= response.status < 400:
+                        raise BroadAirApiError("Unexpected BROAD AIR API redirect")
+                    response.raise_for_status()
+                    stage = "response_body"
+                    envelope = await response.json(content_type=None)
+            except (TimeoutError, aiohttp.ClientError) as err:
+                before_send = isinstance(
+                    err, (aiohttp.ClientConnectorError, aiohttp.ConnectionTimeoutError)
+                )
+                if before_send:
+                    stage = "connect"
+                retryable = before_send or (
+                    read_only
+                    and (
+                        isinstance(err, (TimeoutError, aiohttp.ServerDisconnectedError))
+                        or isinstance(err, aiohttp.ClientResponseError)
+                        and err.status in _RETRYABLE_READ_STATUSES
+                    )
+                )
+                retry = (
+                    retryable
+                    and not isinstance(err, aiohttp.ClientSSLError)
+                    and attempt < _REQUEST_ATTEMPTS
+                )
+                _LOGGER.log(
+                    logging.WARNING if retry else logging.DEBUG,
+                    "BROAD AIR %s attempt %d/%d failed stage=%s error=%s "
+                    "elapsed=%.2fs retry=%s",
+                    operation,
+                    attempt,
+                    _REQUEST_ATTEMPTS,
+                    stage,
+                    type(err).__name__,
+                    time.monotonic() - started,
+                    retry,
+                )
+                if retry:
+                    await asyncio.sleep(_RETRY_DELAY_SECONDS)
+                    continue
+                reason = type(err).__name__
+                if isinstance(err, aiohttp.ClientResponseError):
+                    reason = f"HTTP {err.status}"
+                elif isinstance(err, TimeoutError):
+                    reason = f"{reason} (timeout)"
+                raise BroadAirConnectionError(
+                    f"BROAD AIR {operation} failed at {stage}: {reason} "
+                    f"(attempt {attempt}/{_REQUEST_ATTEMPTS}, "
+                    f"{time.monotonic() - started:.2f}s)"
+                ) from err
+
+            _LOGGER.debug(
+                "BROAD AIR %s received response attempt=%d elapsed=%.2fs",
+                operation,
+                attempt,
+                time.monotonic() - started,
+            )
+            return envelope

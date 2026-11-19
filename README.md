@@ -196,8 +196,10 @@ python3 -m compileall -q custom_components tests
 2. 更新 `pyproject.toml`。
 3. 更新 `CHANGELOG.md`。
 4. 运行 `ruff`、`pytest` 和 `compileall`。
-5. 打 tag，例如 `vX.Y.Z`。
-6. 发布 GitHub release。
+5. 推送与版本号一致的稳定 tag，例如 `vX.Y.Z`。
+6. GitHub Actions 测试通过后会自动发布 GitHub Release，并附上
+   `broadair-vX.Y.Z.zip`。手动安装可解压到 Home Assistant 配置目录。
+7. 在 HACS 选择该 Release 更新 BROAD AIR，然后重启 Home Assistant 并检查集成状态。
 
 ## 文档
 

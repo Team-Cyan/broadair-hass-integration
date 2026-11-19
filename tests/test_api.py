@@ -54,6 +54,7 @@ def test_control_operation_constants() -> None:
 class FakeResponse:
     def __init__(self, payload: Mapping[str, Any]) -> None:
         self._payload = payload
+        self.status = 200
         self.headers = {"Date": "Fri, 15 May 2026 05:47:34 GMT"}
 
     async def __aenter__(self) -> FakeResponse:
@@ -111,3 +112,58 @@ async def _assert_request_reauthenticates_once_when_session_token_expires() -> N
         None,
         "new-token",
     ]
+
+
+@pytest.mark.parametrize(
+    ("path", "failure", "retries", "stage"),
+    [
+        (
+            "Equipment/GetFreshAirStatus",
+            TimeoutError,
+            True,
+            "request_or_response_headers",
+        ),
+        ("Equipment/SetFreshAir", TimeoutError, False, "request_or_response_headers"),
+        ("Equipment/SetFreshAir", api.aiohttp.ConnectionTimeoutError, True, "connect"),
+        (
+            "Equipment/SetFreshAir",
+            api.aiohttp.SocketTimeoutError,
+            False,
+            "response_body",
+        ),
+    ],
+)
+def test_transport_retry_boundaries(path, failure, retries, stage, monkeypatch, caplog):
+    monkeypatch.setattr(api, "_RETRY_DELAY_SECONDS", 0)
+    caplog.set_level("DEBUG", logger=api.__name__)
+
+    class FailingResponse(FakeResponse):
+        async def __aenter__(self):
+            if stage != "response_body":
+                raise failure()
+            return self
+
+        async def json(self, content_type=None):
+            raise failure()
+
+    class Session(FakeSession):
+        def post(self, *args, **kwargs):
+            self.posts.append(kwargs)
+            return FailingResponse({})
+
+    session = Session()
+    client = api.BroadAirApiClient(
+        session,
+        username="private-user",
+        password="private-password",
+        base_url="https://private-host.test",
+        verify_ssl=True,
+    )
+    client._token = "private-token"
+    with pytest.raises(api.BroadAirConnectionError, match=stage):
+        asyncio.run(client._request(path, {"sjx": "4", "eq_guid": "private-guid"}))
+
+    assert len(session.posts) == (2 if retries else 1)
+    assert f"stage={stage}" in caplog.text
+    assert "retry=False" in caplog.text
+    assert "private-" not in caplog.text

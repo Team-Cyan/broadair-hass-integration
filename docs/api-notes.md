@@ -196,3 +196,20 @@ Resolution order:
 Control is intentionally deferred because it changes device state and needs more guardrails and live review.
 
 Phase 2 now wraps the low-risk control surface in explicit Home Assistant services. Live mutation of real hardware should still be reviewed deliberately before adding direct switch or number entities.
+
+### Transport failures and retry policy
+
+API requests have a 10-second connection budget within a 30-second total
+timeout. Transient connection-establishment failures can retry once after two
+seconds. Device-list and status reads also retry once on timeouts, server
+disconnects, or HTTP 502/503/504. The control endpoint is eligible for transport
+retry only when the connection could not be established. A timeout while
+waiting for headers or reading the body can leave the command's outcome
+unknown. HTTP redirects are rejected to keep retries attributable to a single
+endpoint.
+
+Diagnostics report the operation, failure stage, attempt and elapsed time
+without logging credentials, payloads or device identifiers. The
+`request_or_response_headers` stage can include waiting for the server after
+sending the request. A transport retry can recover a failed connection but
+does not replay a command whose outcome is unknown.

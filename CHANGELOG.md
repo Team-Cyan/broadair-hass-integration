@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 - 2026-11-19
+
+- Log cloud request stages, elapsed time, and retry decisions.
+- Retry transient connection failures and read-only requests within a fixed budget.
+- Publish stable tags as GitHub Releases with a Home Assistant installation ZIP.
+
 ## 0.2.4 - 2026-06-26
 
 - Apply realtime refresh payloads directly to the coordinator state cache after
